@@ -1,0 +1,87 @@
+buildscript {
+    repositories {
+        jcenter()
+    }
+}
+
+plugins {
+  id 'net.researchgate.release' version '2.4.0'
+  id 'com.jfrog.bintray' version '1.7.3'
+}
+
+apply plugin: 'java'
+apply plugin: 'maven-publish'
+
+group = "com.expansel"
+
+sourceCompatibility = '1.8'
+targetCompatibility = '1.8'
+
+repositories {
+    jcenter()
+}
+
+
+def erraiVersion = '4.0.0.Final'
+def springVersion = '4.3.10.RELEASE'
+def springSecurityVersion = '4.2.3.RELEASE'
+
+configurations.all {
+    transitive = false
+}
+
+dependencies {
+    compile group: 'org.jboss.errai', name: 'errai-common', version: erraiVersion
+    compile group: 'org.jboss.errai', name: 'errai-codegen', version: erraiVersion
+    compile group: 'org.jboss.errai', name: 'errai-bus', version: erraiVersion
+    compile group: 'org.jboss.errai', name: 'errai-security-server', version: erraiVersion
+    compile group: 'org.springframework', name: 'spring-core', version: springVersion
+    compile group: 'org.springframework', name: 'spring-beans', version: springVersion
+    compile group: 'org.springframework', name: 'spring-context', version: springVersion
+    compile group: 'org.springframework.security', name: 'spring-security-core', version: springSecurityVersion
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+    runtime group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
+
+    testCompile 'junit:junit:4.12'
+}
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+publishing {
+    publications {
+        MainPublication(MavenPublication) {
+            from components.java
+            groupId 'com.expansel'
+            artifactId 'errai-spring-server'
+            artifact sourcesJar
+        }
+    }
+}
+
+bintray {
+    user = project.hasProperty('bintrayUser') ? project.property('bintrayUser') : System.getenv('BINTRAY_USER')
+    key = project.hasProperty('bintrayApiKey') ? project.property('bintrayApiKey') : System.getenv('BINTRAY_API_KEY')
+    publications = ['MainPublication']
+    dryRun = false
+    publish = true
+    pkg {
+        repo = 'maven'
+        name = 'errai-spring-server'
+        version {
+            name = project.version
+            desc = 'Release'
+            released  = new Date()
+            vcsTag = project.version
+        }
+    }
+}
+
+project.tasks.afterReleaseBuild.dependsOn bintrayUpload
+

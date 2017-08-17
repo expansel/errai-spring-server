@@ -1,4 +1,4 @@
-package com.expansel.errai.spring.server;
+package com.expansel.errai.springsecurity.server;
 
 import java.util.ArrayList;
 import java.util.Collection;

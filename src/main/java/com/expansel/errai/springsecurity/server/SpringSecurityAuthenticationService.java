@@ -24,8 +24,6 @@ import org.springframework.stereotype.Component;
 @Service
 @Scope("session")
 public class SpringSecurityAuthenticationService implements AuthenticationService {
-    private boolean invalidateSessionOnLogout = true;
-
     @Autowired
     private AuthenticationManager authenticationManager;
 
@@ -62,12 +60,11 @@ public class SpringSecurityAuthenticationService implements AuthenticationServic
 
     @Override
     public void logout() {
+        // logout is probably best handled with SpringSecurity logout url
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             SecurityContextHolder.getContext().setAuthentication(null);
         }
-        if (invalidateSessionOnLogout) {
-            session.invalidate();
-        }
+        session.invalidate();
     }
 
     @Override
@@ -76,9 +73,5 @@ public class SpringSecurityAuthenticationService implements AuthenticationServic
             return getUser(SecurityContextHolder.getContext().getAuthentication());
         }
         return User.ANONYMOUS;
-    }
-
-    public void setInvalidateSessionOnLogout(boolean invalidateSessionOnLogout) {
-        this.invalidateSessionOnLogout = invalidateSessionOnLogout;
     }
 }

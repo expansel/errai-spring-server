@@ -72,6 +72,7 @@ bintray {
     dryRun = false
     publish = true
     pkg {
+        userOrg = 'expansel'
         repo = 'maven'
         name = 'errai-spring-server'
         version {

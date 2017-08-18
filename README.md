@@ -9,6 +9,14 @@ This library is aimed at making Errai and Spring play together on the server sid
 ## Maven repository
 The maven repository is hosted on bintray:
 
+```xml
+      <repository>
+        <id>bintray-expansel-maven</id>
+        <name>Expansel Bintray</name>
+        <url>https://dl.bintray.com/expansel/maven</url>
+      </repository>
+```
+
 [ ![Download](https://api.bintray.com/packages/expansel/maven/errai-spring-server/images/download.svg) ](https://bintray.com/expansel/maven/errai-spring-server/_latestVersion)
 
 

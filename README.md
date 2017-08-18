@@ -16,6 +16,7 @@ The maven repository is hosted on bintray:
         <url>https://dl.bintray.com/expansel/maven</url>
       </repository>
 ```
+Latest version:
 
 [ ![Download](https://api.bintray.com/packages/expansel/maven/errai-spring-server/images/download.svg) ](https://bintray.com/expansel/maven/errai-spring-server/_latestVersion)
 

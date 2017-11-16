@@ -1,5 +1,6 @@
 package com.expansel.errai.springsecurity.server;
 
+import org.jboss.errai.bus.server.servlet.CSRFTokenCheck;
 import org.jboss.errai.bus.server.util.SecureHashUtil;
 import org.jboss.errai.common.client.framework.Constants;
 import org.slf4j.Logger;
@@ -39,8 +40,8 @@ public class ErraiCsrfTokenRepository implements CsrfTokenRepository {
             session.setAttribute(this.sessionAttributeName, token);
 
             // Assign the token the way Errai expects it
-            // TODO: Replace "errai.bus.csrf_token" with CSRFTokenCheck.CSRF_TOKEN_ATTRIBUTE_NAME in 4.1.1.Final
-            session.setAttribute("errai.bus.csrf_token", token.getToken());
+            // TODO: Replace with CSRFTokenCheck.CSRF_TOKEN_ATTRIBUTE_NAME in 4.1.1.Final
+            session.setAttribute("errai.bus.csrf_token"/*CSRFTokenCheck.CSRF_TOKEN_ATTRIBUTE_NAME*/, token.getToken());
         }
     }
 

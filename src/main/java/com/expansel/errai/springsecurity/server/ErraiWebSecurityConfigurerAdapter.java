@@ -21,15 +21,14 @@ package com.expansel.errai.springsecurity.server;
 
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.web.csrf.CsrfFilter;
 
 public class ErraiWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
-        ErraiCsrfTokenRepository tokenRepository = new ErraiCsrfTokenRepository();
-
-        http.addFilterBefore(new ErraiCsrfFilter(CsrfFilter.DEFAULT_CSRF_MATCHER), CsrfFilter.class)
-            .csrf().csrfTokenRepository(tokenRepository);
+        http.csrf()
+            .csrfTokenRepository(new ErraiCsrfTokenRepository())
+        .and()
+            .exceptionHandling().accessDeniedHandler(new ErraiCsrfAccessDeniedHandler());
     }
 }

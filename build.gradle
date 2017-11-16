@@ -22,7 +22,7 @@ repositories {
 }
 
 
-def erraiVersion = '4.0.0.Final'
+def erraiVersion = '4.1.0.Final'
 def springVersion = '4.3.10.RELEASE'
 def springSecurityVersion = '4.2.3.RELEASE'
 
@@ -36,9 +36,12 @@ dependencies {
     compile group: 'org.jboss.errai', name: 'errai-bus', version: erraiVersion
     compile group: 'org.jboss.errai', name: 'errai-security-server', version: erraiVersion
     compile group: 'org.springframework', name: 'spring-core', version: springVersion
+    compile group: 'org.springframework', name: 'spring-web', version: springVersion
     compile group: 'org.springframework', name: 'spring-beans', version: springVersion
     compile group: 'org.springframework', name: 'spring-context', version: springVersion
     compile group: 'org.springframework.security', name: 'spring-security-core', version: springSecurityVersion
+    compile group: 'org.springframework.security', name: 'spring-security-web', version: springSecurityVersion
+    compile group: 'org.springframework.security', name: 'spring-security-config', version: springSecurityVersion
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
     compileOnly group: 'javax.servlet', name: 'javax.servlet-api', version: '3.1.0'
 

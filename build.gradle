@@ -22,7 +22,7 @@ repositories {
 }
 
 
-def erraiVersion = '4.1.0.Final'
+def erraiVersion = '4.1.1.Final'
 def springVersion = '4.3.10.RELEASE'
 def springSecurityVersion = '4.2.3.RELEASE'
 

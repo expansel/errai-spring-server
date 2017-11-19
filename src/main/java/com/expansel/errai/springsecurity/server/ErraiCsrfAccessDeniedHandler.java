@@ -13,6 +13,9 @@ import java.io.IOException;
 
 import static org.jboss.errai.common.client.framework.Constants.ERRAI_CSRF_TOKEN_HEADER;
 
+/**
+ * @author Ben Dol
+ */
 public class ErraiCsrfAccessDeniedHandler extends AccessDeniedHandlerImpl {
 
     @Override
@@ -26,8 +29,7 @@ public class ErraiCsrfAccessDeniedHandler extends AccessDeniedHandlerImpl {
                 throw new IllegalStateException("Cannot create CSRF token challenge when session is null.");
             }
 
-            // TODO: Replace with CSRFTokenCheck.CSRF_TOKEN_ATTRIBUTE_NAME in 4.1.1.Final
-            final String token = (String) session.getAttribute("errai.bus.csrf_token"/*CSRFTokenCheck.CSRF_TOKEN_ATTRIBUTE_NAME*/);
+            final String token = (String) session.getAttribute(CSRFTokenCheck.CSRF_TOKEN_ATTRIBUTE_NAME);
             response.setHeader(ERRAI_CSRF_TOKEN_HEADER, token);
         }
 

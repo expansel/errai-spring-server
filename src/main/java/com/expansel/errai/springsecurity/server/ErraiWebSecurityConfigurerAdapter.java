@@ -22,6 +22,9 @@ package com.expansel.errai.springsecurity.server;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
+/**
+ * @author Ben Dol
+ */
 public class ErraiWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
     @Override

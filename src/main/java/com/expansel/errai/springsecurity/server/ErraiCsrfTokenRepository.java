@@ -13,6 +13,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+/**
+ * @author Ben Dol
+ */
 public class ErraiCsrfTokenRepository implements CsrfTokenRepository {
 
     private final static Logger logger = LoggerFactory.getLogger(ErraiCsrfTokenRepository.class);
@@ -40,8 +43,7 @@ public class ErraiCsrfTokenRepository implements CsrfTokenRepository {
             session.setAttribute(this.sessionAttributeName, token);
 
             // Assign the token the way Errai expects it
-            // TODO: Replace with CSRFTokenCheck.CSRF_TOKEN_ATTRIBUTE_NAME in 4.1.1.Final
-            session.setAttribute("errai.bus.csrf_token"/*CSRFTokenCheck.CSRF_TOKEN_ATTRIBUTE_NAME*/, token.getToken());
+            session.setAttribute(CSRFTokenCheck.CSRF_TOKEN_ATTRIBUTE_NAME, token.getToken());
         }
     }
 

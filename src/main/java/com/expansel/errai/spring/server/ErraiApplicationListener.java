@@ -31,13 +31,14 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.stereotype.Component;
 
 /**
  * <p>
- * Spring BeanFactoryPostProcessor and ApplicationEvent listener to subscribe
- * Spring managed @Service objects with the Errai MessageBus.
+ * Spring {@link BeanFactoryPostProcessor} and Application Event listener to subscribe
+ * Spring managed @Service objects with the Errai MessageBus. This is based on 
+ * CDIExtensionPoints and ServiceProcessor classes that are used in CDI and 
+ * non CDI environments respectively.
  * </p>
  * 
  * <p>
@@ -52,6 +53,9 @@ import org.springframework.stereotype.Component;
  * with @Command.
  * </p>
  * 
+ * <p>
+ * Example for spring boot servlet registration:
+ * </p>
  * <pre>
  * &#64;Bean
  * public ServletRegistrationBean servletRegistrationBean() {
@@ -72,10 +76,26 @@ import org.springframework.stereotype.Component;
 public class ErraiApplicationListener implements BeanFactoryPostProcessor {
     private static final Logger logger = LoggerFactory.getLogger(ErraiApplicationListener.class);
     private List<ServiceImplementation> services = new ArrayList<ServiceImplementation>();
-
+    private MessageCallbackWrapper messageCallbackWrapper;
+    
+    public ErraiApplicationListener() {
+        this(null); // null uses default
+    }
+    
+    public ErraiApplicationListener(MessageCallbackWrapper messageCallbackWrapper) {
+        this.messageCallbackWrapper = messageCallbackWrapper;
+        if(messageCallbackWrapper == null) {
+            messageCallbackWrapper = new NoWrapMessageCallbackWrapper();
+        }
+    }
+    
     @EventListener
     public void onApplicationEvent(ContextClosedEvent event) {
         logger.info("ContextClosedEvent");
+        unsubscribeAll();
+    }
+
+    private void unsubscribeAll() {
         MessageBus bus = ErraiServiceSingleton.getService().getBus();
         if (bus != null) {
             for (ServiceImplementation serviceImplementation : services) {
@@ -91,14 +111,24 @@ public class ErraiApplicationListener implements BeanFactoryPostProcessor {
         logger.info("ContextRefreshedEvent");
 
         ApplicationContext applicationContext = event.getApplicationContext();
-        logger.info("Found " + services.size() + " services");
-
+        logger.info("Found " + services.size() + " services in " + Integer.toHexString(System.identityHashCode(applicationContext)) + ". Is it already active? " + ErraiServiceSingleton.isActive());
+        
+        if(ErraiServiceSingleton.isActive()) {
+            logger.info("Already initialized so first unsubscribing current services, before reregistering");
+            unsubscribeAll();
+        }
         ErraiServiceSingleton.registerInitCallback(new ErraiServiceSingleton.ErraiInitCallback() {
             @SuppressWarnings("rawtypes")
             @Override
             public void onInit(ErraiService service) {
                 logger.info("Subscribing " + services.size() + " services.");
                 for (ServiceImplementation serviceImplementation : services) {
+                    String subject = serviceImplementation.getSubject();
+                    MessageBus bus = ErraiServiceSingleton.getService().getBus();
+                    if(bus.isSubscribed(subject)) {
+                        logger.info("Unsubscribing " + subject);
+                        bus.unsubscribeAll(subject);
+                    }
                     subscribe(applicationContext, service, serviceImplementation);
                 }
             }
@@ -151,11 +181,12 @@ public class ErraiApplicationListener implements BeanFactoryPostProcessor {
             // singletons for non-rpc's
             Object instance = applicationContext.getBean(serviceImplementation.getBeanName());
             final MessageCallback callback = serviceTypeParser.getCallback(instance);
+            final MessageCallback wrappedCallback = messageCallbackWrapper.wrap(callback);
             if (callback != null) {
                 if (serviceTypeParser.isLocal()) {
-                    bus.subscribeLocal(subject, callback);
+                    bus.subscribeLocal(subject, wrappedCallback);
                 } else {
-                    bus.subscribe(subject, callback);
+                    bus.subscribe(subject, wrappedCallback);
                 }
             }
         } else {
@@ -165,15 +196,18 @@ public class ErraiApplicationListener implements BeanFactoryPostProcessor {
             final ServiceInstanceProvider serviceInstanceProvider = new ServiceInstanceProvider() {
                 @Override
                 public Object get(Message message) {
-                    return applicationContext.getBean(serviceImplementation.getBeanName());
+                    Object obj = applicationContext.getBean(serviceImplementation.getBeanName());
+                    logger.info("obj instance: " + obj.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(obj)));
+                    return obj;
                 }
             };
 
             Class<?> remoteInterface = serviceTypeParser.getRemoteImplementation();
             for (final Method method : remoteInterface.getMethods()) {
                 if (ProxyUtil.isMethodInInterface(remoteInterface, method)) {
-                    epts.put(ProxyUtil.createCallSignature(remoteInterface, method),
-                            RPCEndpointFactory.createEndpointFor(serviceInstanceProvider, method, bus));
+                    MessageCallback rpcCallback = RPCEndpointFactory.createEndpointFor(serviceInstanceProvider, method, bus);
+                    MessageCallback wrappedCallback = messageCallbackWrapper.wrap(rpcCallback);
+                    epts.put(ProxyUtil.createCallSignature(remoteInterface, method), wrappedCallback);
                 }
             }
 
@@ -198,18 +232,21 @@ public class ErraiApplicationListener implements BeanFactoryPostProcessor {
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
         logger.info("Look for Errai Service definitions");
-        String[] beans = beanFactory.getBeanDefinitionNames();
-        for (String beanName : beans) {
+        String[] beanNames = beanFactory.getBeanNamesForAnnotation(Service.class);
+        for (String beanName : beanNames) {
+            if(beanName.startsWith("scopedTarget.")) {
+                logger.debug("Skipping scopedTarget bean: " + beanName);
+                // scoped proxy classes are registered with an internal name and we should only register the proxies as services
+                // See org.springframework.aop.scope.ScopedProxyUtils
+                continue;
+            }
             Class<?> beanType = beanFactory.getType(beanName);
-            Service service = AnnotationUtils.findAnnotation(beanType, Service.class);
-            if (service != null) {
-                try {
-                    ServiceTypeParser serviceTypeParser = new ServiceTypeParser(beanType);
-                    services.add(new ServiceImplementation(serviceTypeParser, beanName));
-                    logger.debug("Found Errai Service definition: beanName=" + beanName + ", beanType=" + beanType);
-                } catch (NotAService e) {
-                    logger.warn("Service annotation present but threw NotAServiceException", e);
-                }
+            try {
+                ServiceTypeParser serviceTypeParser = new ServiceTypeParser(beanType);
+                services.add(new ServiceImplementation(serviceTypeParser, beanName));
+                logger.debug("Found Errai Service definition: beanName=" + beanName + ", beanType=" + beanType);
+            } catch (NotAService e) {
+                logger.warn("Service annotation present but threw NotAServiceException", e);
             }
         }
     }

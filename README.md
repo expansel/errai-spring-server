@@ -44,10 +44,12 @@ Latest version:
 ## Sample projects
 ### Spring war
 Builds a standard java war project. This is the primary showcase for features.
+
 <https://github.com/expansel/errai-spring-sample>
 
 
 ### Spring boot
 A sample illustrating use in a Spring Boot app. [Status: Out of date]
+
 <https://github.com/expansel/errai-spring-boot-sample>
 

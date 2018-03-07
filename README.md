@@ -1,5 +1,5 @@
 # errai-spring-server
-This library is aimed at making Errai and Spring play together on the server side without a CDI environment. Currently it has mainly been tested in a Spring boot environment and has not seen production use.
+This library is aimed at making Errai and Spring play together on the server side without a CDI environment. It has been tested as a normal spring war app and as a spring boot [Status: out of date] app (see samples at the end of this document).
 
 
 ## Core features:

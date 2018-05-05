@@ -85,7 +85,7 @@ public class ErraiApplicationListener implements BeanFactoryPostProcessor {
     public ErraiApplicationListener(MessageCallbackWrapper messageCallbackWrapper) {
         this.messageCallbackWrapper = messageCallbackWrapper;
         if(messageCallbackWrapper == null) {
-            messageCallbackWrapper = new NoWrapMessageCallbackWrapper();
+            this.messageCallbackWrapper = new NoWrapMessageCallbackWrapper();
         }
     }
     
